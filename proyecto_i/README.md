@@ -1,15 +1,13 @@
 # Proyecto I
 
-[![CI Proyecto I](https://github.com/jiehao-xu/dsia-26-27-xu-jiehao/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/jiehao-xu/dsia-26-27-xu-jiehao/actions/workflows/ci.yml)
-
-Proyecto I forma parte del repositorio `jiehao-xu/dsia-26-27-xu-jiehao`, dentro de la carpeta `proyecto_i`. Mantiene su propio `.gitignore` y la configuración de sus pasos de CI en `.github/actions/ci/action.yml`. El proyecto contiene dos aplicaciones: `ventas_app`, para validar y procesar ventas, e `internet_app`, para analizar las variables educativas de la EPA. Ambas separan lectura y escritura, validación, métricas y ejecución por terminal, y cuentan con pruebas de `pytest`.
+Proyecto I mantiene su propio `.gitignore` y la configuración de sus pasos de CI en `.github/actions/ci/action.yml`. El proyecto contiene dos aplicaciones: `ventas_app`, para validar y procesar ventas, e `internet_app`, para analizar las variables educativas de la EPA. Ambas separan lectura y escritura, validación, métricas y ejecución por terminal, y cuentan con pruebas de `pytest`.
 
 Ejecuta los comandos de este README en **Bash desde la carpeta `proyecto_i`**. Las aplicaciones aceptan rutas absolutas o relativas a esa carpeta.
 
 ## Estructura
 
 ```text
-proyecto_i/                         # Carpeta del proyecto en el repositorio
+proyecto_i/                        
 ├── .github/actions/ci/action.yml
 ├── .gitignore
 ├── ventas_app/
