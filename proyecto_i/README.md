@@ -255,11 +255,3 @@ Los pasos son:
 
 Los comandos de instalación y tests se ejecutan desde `proyecto_i`. La caché de dependencias utiliza `proyecto_i/requirements.txt`. Las versiones principales están fijadas en `requirements.txt`. Los entornos virtuales, cachés de pytest e informes de cobertura se excluyen mediante `.gitignore`.
 
-Comprobación local del **13 de octubre de 2026**, tras instalar desde `requirements.txt` en un entorno limpio de **Python 3.12.10**:
-
-- **129 tests superados**: 51 de ventas y 78 de EPA.
-- **94,96 % de cobertura conjunta**.
-
-**CI verificada en GitHub Actions el 13 de octubre de 2026:** el [run verde de Proyecto I](https://github.com/jiehao-xu/dsia-26-27-xu-jiehao/actions/runs/38459678005), correspondiente al commit `3313a18`, terminó correctamente. Comprueba ambas partes con Python 3.12, instalación desde `requirements.txt` y cobertura mínima conjunta del 60 %. El badge muestra el estado del [workflow del repositorio](https://github.com/jiehao-xu/dsia-26-27-xu-jiehao/actions/workflows/ci.yml).
-
-Referencia: [tests de Python con GitHub Actions](https://docs.github.com/en/actions/tutorials/build-and-test-code/python).

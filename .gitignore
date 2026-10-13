@@ -1,9 +1,8 @@
 .venv/
 venv/
 __pycache__/
-.venv-ci/
 *.ipynb
-/.proyecto-i-git-backup/
+
 
 
 
