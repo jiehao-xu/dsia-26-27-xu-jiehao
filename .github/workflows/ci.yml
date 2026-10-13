@@ -1,0 +1,21 @@
+name: CI Proyecto I
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  tests:
+    name: Parte A y Parte B · Python 3.12
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+      - name: Ejecutar CI de Proyecto I
+        uses: ./proyecto_i/.github/actions/ci
