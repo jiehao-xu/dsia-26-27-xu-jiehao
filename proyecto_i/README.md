@@ -260,6 +260,6 @@ Comprobación local del **13 de octubre de 2026**, tras instalar desde `requirem
 - **129 tests superados**: 51 de ventas y 78 de EPA.
 - **94,96 % de cobertura conjunta**.
 
-**La evidencia de CI sigue pendiente hasta obtener un run verde real en GitHub Actions.** Consulta el [workflow del repositorio](https://github.com/jiehao-xu/dsia-26-27-xu-jiehao/actions/workflows/ci.yml) y conserva el enlace al run correcto. La comprobación local no sustituye ese requisito.
+**CI verificada en GitHub Actions el 13 de octubre de 2026:** el [run verde de Proyecto I](https://github.com/jiehao-xu/dsia-26-27-xu-jiehao/actions/runs/38459678005), correspondiente al commit `3313a18`, terminó correctamente. Comprueba ambas partes con Python 3.12, instalación desde `requirements.txt` y cobertura mínima conjunta del 60 %. El badge muestra el estado del [workflow del repositorio](https://github.com/jiehao-xu/dsia-26-27-xu-jiehao/actions/workflows/ci.yml).
 
 Referencia: [tests de Python con GitHub Actions](https://docs.github.com/en/actions/tutorials/build-and-test-code/python).
