@@ -1,0 +1,36 @@
+# Credenciales locales; el ejemplo sin claves se versiona.
+.env
+.env.*
+!.env.example
+
+# Entornos virtuales y archivos compilados de Python.
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+
+# Descargas, resultados y modelos regenerables con el pipeline.
+/data/
+/models/
+
+# Pruebas, cobertura y herramientas de análisis.
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml
+
+# Archivos de construcción e instalación.
+build/
+dist/
+*.egg-info/
+
+# Archivos locales del editor, sistema y ejecución.
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+*.log
+*.tmp
