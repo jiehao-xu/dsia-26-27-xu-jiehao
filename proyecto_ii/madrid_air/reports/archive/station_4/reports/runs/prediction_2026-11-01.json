@@ -1,0 +1,24 @@
+{
+  "date": "2026-11-01",
+  "station": 4,
+  "no2": 29.841790160383102,
+  "unit": "µg/m³",
+  "model": "ridge_basic",
+  "model_created_utc": "2026-11-22T10:15:34.546709+00:00",
+  "trained_through": "2025-12-31",
+  "historical_simulation": true,
+  "information_cutoffs": {
+    "no2": "2026-10-31",
+    "meteo": "2026-10-25",
+    "traffic": "2026-10-31"
+  },
+  "missing_features": 0,
+  "n_features": 11,
+  "missing_feature_names": [],
+  "test_mae": 5.440025122658872,
+  "ai_status": "real",
+  "ai_provider": "google",
+  "ai_model": "gemini-3.1-flash-lite",
+  "explanation": "La predicción para la estación 4 el 2026-11-01 estima un valor de NO₂ de 29.841790160383102 µg/m³ sin entradas ausentes. Este valor es una estimación y el MAE histórico de 5.440025122658872 no representa un intervalo de confianza.",
+  "generated_utc": "2026-11-22T10:52:02.054489+00:00"
+}

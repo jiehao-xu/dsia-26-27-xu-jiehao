@@ -1,0 +1,190 @@
+{
+  "unit": "µg/m³",
+  "partitions": {
+    "train": {
+      "start": "2023-01-02",
+      "end": "2024-11-30",
+      "n": 693
+    },
+    "validation": {
+      "start": "2025-01-02",
+      "end": "2025-12-31",
+      "n": 362
+    },
+    "test": {
+      "start": "2026-01-01",
+      "end": "2026-10-31",
+      "n": 300
+    }
+  },
+  "validation": {
+    "persistence": {
+      "mae": 7.035911602209945,
+      "rmse": 8.994012741450291,
+      "n": 362
+    },
+    "ridge_basic": {
+      "mae": 6.311420433641163,
+      "rmse": 7.8892035570024355,
+      "n": 362
+    },
+    "ridge_full": {
+      "mae": 6.408196548701968,
+      "rmse": 8.018013649756664,
+      "n": 362
+    },
+    "hist_full": {
+      "mae": 7.166484165851538,
+      "rmse": 9.008393003274527,
+      "n": 362
+    }
+  },
+  "test": {
+    "selected": {
+      "mae": 5.440025122658872,
+      "rmse": 6.886189057430866,
+      "n": 300
+    },
+    "persistence": {
+      "mae": 5.536666666666667,
+      "rmse": 7.27896512791024,
+      "n": 300
+    },
+    "mae_improvement_vs_persistence": 0.09664154400779523,
+    "by_month": {
+      "2026-01": {
+        "mae": 5.6635255941211495,
+        "rmse": 7.184861045178018,
+        "n": 31
+      },
+      "2026-02": {
+        "mae": 6.737037413486937,
+        "rmse": 8.151189053228526,
+        "n": 28
+      },
+      "2026-03": {
+        "mae": 5.227410784232351,
+        "rmse": 6.743991097298573,
+        "n": 31
+      },
+      "2026-04": {
+        "mae": 5.540058768332537,
+        "rmse": 6.481874407819212,
+        "n": 30
+      },
+      "2026-05": {
+        "mae": 4.1934853635932345,
+        "rmse": 5.5288244190401885,
+        "n": 31
+      },
+      "2026-06": {
+        "mae": 3.6951727814120594,
+        "rmse": 4.539441611930518,
+        "n": 30
+      },
+      "2026-07": {
+        "mae": 5.503941917101583,
+        "rmse": 6.624469557560072,
+        "n": 29
+      },
+      "2026-08": {
+        "mae": 4.951887777041161,
+        "rmse": 6.1621072187554375,
+        "n": 31
+      },
+      "2026-09": {
+        "mae": 8.111115692776801,
+        "rmse": 10.006363955116186,
+        "n": 30
+      },
+      "2026-10": {
+        "mae": 4.904833146890167,
+        "rmse": 6.089816655065724,
+        "n": 29
+      }
+    },
+    "high_concentration": {
+      "threshold_training_p90": 42.0,
+      "metrics": {
+        "mae": 11.07602655641145,
+        "rmse": 11.953721296709887,
+        "n": 15
+      }
+    }
+  },
+  "missing_features": {
+    "train": {
+      "no2_lag_1": 0.0,
+      "no2_lag_2": 0.005772005772005772,
+      "no2_lag_7": 0.012987012987012988,
+      "no2_mean_7": 0.002886002886002886,
+      "no2_std_7": 0.002886002886002886,
+      "METEO_temperatura_lag_7": 0.008658008658008658,
+      "METEO_temperatura_min_lag_7": 0.008658008658008658,
+      "METEO_temperatura_max_lag_7": 0.008658008658008658,
+      "METEO_HORAS_VALIDAS_lag_7": 0.008658008658008658,
+      "TRAFICO_INTENSIDAD_lag_1": 0.0,
+      "TRAFICO_OCUPACION_lag_1": 0.0,
+      "TRAFICO_CARGA_lag_1": 0.0,
+      "TRAFICO_VELOCIDAD_MEDIA_lag_1": 1.0,
+      "TRAFICO_N_SENSORES_lag_1": 0.0,
+      "TRAFICO_COBERTURA_SENSORES_lag_1": 0.0,
+      "TRAFICO_N_INTERVALOS_lag_1": 0.0,
+      "weekday": 0.0,
+      "month_sin": 0.0,
+      "month_cos": 0.0,
+      "weekend": 0.0,
+      "holiday": 0.0,
+      "calendar_missing": 0.0
+    },
+    "validation": {
+      "no2_lag_1": 0.0,
+      "no2_lag_2": 0.0055248618784530384,
+      "no2_lag_7": 0.019337016574585635,
+      "no2_mean_7": 0.0055248618784530384,
+      "no2_std_7": 0.0055248618784530384,
+      "METEO_temperatura_lag_7": 0.0055248618784530384,
+      "METEO_temperatura_min_lag_7": 0.0055248618784530384,
+      "METEO_temperatura_max_lag_7": 0.0055248618784530384,
+      "METEO_HORAS_VALIDAS_lag_7": 0.0,
+      "TRAFICO_INTENSIDAD_lag_1": 0.16574585635359115,
+      "TRAFICO_OCUPACION_lag_1": 0.16574585635359115,
+      "TRAFICO_CARGA_lag_1": 0.16574585635359115,
+      "TRAFICO_VELOCIDAD_MEDIA_lag_1": 1.0,
+      "TRAFICO_N_SENSORES_lag_1": 0.16574585635359115,
+      "TRAFICO_COBERTURA_SENSORES_lag_1": 0.16574585635359115,
+      "TRAFICO_N_INTERVALOS_lag_1": 0.16574585635359115,
+      "weekday": 0.0,
+      "month_sin": 0.0,
+      "month_cos": 0.0,
+      "weekend": 0.0,
+      "holiday": 0.0,
+      "calendar_missing": 0.0
+    },
+    "test": {
+      "no2_lag_1": 0.0,
+      "no2_lag_2": 0.006666666666666667,
+      "no2_lag_7": 0.006666666666666667,
+      "no2_mean_7": 0.0,
+      "no2_std_7": 0.0,
+      "METEO_temperatura_lag_7": 0.0,
+      "METEO_temperatura_min_lag_7": 0.0,
+      "METEO_temperatura_max_lag_7": 0.0,
+      "METEO_HORAS_VALIDAS_lag_7": 0.0,
+      "TRAFICO_INTENSIDAD_lag_1": 1.0,
+      "TRAFICO_OCUPACION_lag_1": 1.0,
+      "TRAFICO_CARGA_lag_1": 1.0,
+      "TRAFICO_VELOCIDAD_MEDIA_lag_1": 1.0,
+      "TRAFICO_N_SENSORES_lag_1": 1.0,
+      "TRAFICO_COBERTURA_SENSORES_lag_1": 1.0,
+      "TRAFICO_N_INTERVALOS_lag_1": 1.0,
+      "weekday": 0.0,
+      "month_sin": 0.0,
+      "month_cos": 0.0,
+      "weekend": 0.0,
+      "holiday": 0.0,
+      "calendar_missing": 0.0
+    }
+  },
+  "selected": "ridge_basic"
+}
