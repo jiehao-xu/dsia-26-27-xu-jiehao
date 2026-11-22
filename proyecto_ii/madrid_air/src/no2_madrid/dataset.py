@@ -84,6 +84,35 @@ def aggregate_traffic(paths, chunksize=250_000):
     return combined
 
 
+
+def load_traffic_daily(paths, cache):
+    """Reutiliza meses inalterados; añadir meses sólo agrega sus nuevos CSV."""
+    import json
+    signature = {"version": 2, "scope": "madrid_network", "files": [
+        [str(f), f.stat().st_size, f.stat().st_mtime_ns] for f in paths]}
+    meta = cache.with_suffix(".json")
+    previous = json.loads(meta.read_text(encoding="utf-8")) if meta.exists() else None
+    if cache.exists() and previous == signature:
+        return pd.read_csv(cache, sep=";", parse_dates=["FECHA"]).set_index("FECHA")
+    traffic = None
+    if cache.exists() and previous and previous.get("version") == 2 and previous.get("scope") == "madrid_network":
+        old = {row[0]: row[1:] for row in previous["files"]}
+        current = {row[0]: row[1:] for row in signature["files"]}
+        if old and old.keys() < current.keys() and all(current[name] == value for name, value in old.items()):
+            new_paths = [f for f in paths if str(f) not in old]
+            existing = pd.read_csv(cache, sep=";", parse_dates=["FECHA"]).set_index("FECHA")
+            log.info("Caché incremental: se agregan %d meses nuevos.", len(new_paths))
+            addition = aggregate_traffic(new_paths)
+            candidate = pd.concat([existing, addition]).sort_index()
+            if not candidate.index.has_duplicates:
+                traffic = candidate
+    if traffic is None:
+        traffic = aggregate_traffic(paths)
+    guardar_csv(traffic.reset_index(), cache)
+    write_json(meta, signature)
+    return traffic
+
+
 def aggregate_municipal_meteo(frame):
     frame = frame.copy()
     if frame.empty:
@@ -124,16 +153,7 @@ def build_dataset(settings: Settings):
         traffic_files = sorted((p / "traffic").glob("trafico_*.csv.gz"))
         # Caché de toda la red por firma de archivos; evita releer gigabytes al predecir.
         cache = settings.data_dir / "dataset" / "traffic_daily.csv"
-        signature = {"version": 2, "scope": "madrid_network", "files": [
-            [str(f), f.stat().st_size, f.stat().st_mtime_ns] for f in traffic_files]}
-        import json
-        meta = cache.with_suffix(".json")
-        if cache.exists() and meta.exists() and json.loads(meta.read_text(encoding="utf-8")) == signature:
-            traffic = pd.read_csv(cache, sep=";", parse_dates=["FECHA"]).set_index("FECHA")
-        else:
-            traffic = aggregate_traffic(traffic_files)
-            guardar_csv(traffic.reset_index(), cache)
-            write_json(meta, signature)
+        traffic = load_traffic_daily(traffic_files, cache)
         daily = daily.join(traffic)
     guardar_csv(daily.reset_index(), settings.dataset_path)
     sources = [*files, *meteo_files, calendar_path, *traffic_files]

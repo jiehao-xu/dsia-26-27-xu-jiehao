@@ -54,8 +54,10 @@ def train(settings: Settings, train_end="2024-12-31", validation_end="2025-12-31
         if mask.sum() < 10:
             raise ValueError(f"La partición {label} necesita al menos 10 días válidos; revisa fechas/cobertura.")
     basic = [c for c in x if not c.startswith(("METEO_", "TRAFICO_"))]
-    specs = {"ridge_basic": ("ridge", basic), "ridge_full": ("ridge", list(x.columns)),
-             "hist_full": ("hist", list(x.columns))}
+    no_traffic = [c for c in x if not c.startswith("TRAFICO_")]
+    specs = {"ridge_basic": ("ridge", basic),
+             "ridge_no_traffic": ("ridge", no_traffic), "ridge_full": ("ridge", list(x.columns)),
+             "hist_no_traffic": ("hist", no_traffic), "hist_full": ("hist", list(x.columns))}
     report = {"unit": "µg/m³", "partitions": {}, "validation": {}, "test": {}, "missing_features": {}}
     for label, mask in masks.items():
         dates = x.index[mask]
@@ -88,12 +90,23 @@ def train(settings: Settings, train_end="2024-12-31", validation_end="2025-12-31
     model.fit(x.loc[development, columns], y.loc[development])
     prediction = np.asarray(model.predict(x.loc[te, columns])).reshape(-1)
     prediction = prediction.clip(min=0)
+    candidate_predictions = {}
+    for name, (_, candidate_columns) in specs.items():
+        candidate = fitted[name]
+        if name != winner:
+            candidate.fit(x.loc[development, candidate_columns], y.loc[development])
+        candidate_predictions[name] = candidate.predict(x.loc[te, candidate_columns]).clip(min=0)
+    report["test"]["candidates"] = {name: metrics(y.loc[te], values)
+                                       for name, values in candidate_predictions.items()}
+    report["traffic_evaluation"] = traffic_evaluation(x, y, masks, report, candidate_predictions)
     report["selected"] = winner
     report["test"]["selected"] = metrics(y.loc[te], prediction)
     report["test"]["persistence"] = metrics(y.loc[te], x.loc[te, baseline_column])
     report["test"]["mae_improvement_vs_persistence"] = report["test"]["persistence"]["mae"] - report["test"]["selected"]["mae"]
     evaluation = pd.DataFrame({"observed": y.loc[te], "predicted": prediction,
                                "persistence": x.loc[te, baseline_column]})
+    for name, values in candidate_predictions.items():
+        evaluation[name] = values
     report["test"]["by_month"] = {str(month): metrics(g.observed, g.predicted)
                                        for month, g in evaluation.groupby(evaluation.index.strftime("%Y-%m"))}
     threshold = float(y.loc[development].quantile(.9))
@@ -120,8 +133,45 @@ def train(settings: Settings, train_end="2024-12-31", validation_end="2025-12-31
     write_json(settings.model_path.with_suffix(".json"), metadata)
     folder = settings.output_dir / "reports"
     write_json(folder / "metrics.json", report)
+    write_json(folder / "traffic_evaluation.json", report["traffic_evaluation"])
     evaluation.to_csv(folder / "test_predictions.csv", sep=";", index_label="FECHA")
     from no2_madrid.reporting import training_report
     training_report(folder, report, evaluation)
     log.info("Modelo seleccionado: %s; MAE test %.3f µg/m³", winner, report["test"]["selected"]["mae"])
     return report
+
+
+def traffic_evaluation(x, y, masks, report, predictions):
+    """Comparación con parámetros y fechas idénticos; no selecciona con test."""
+    import hashlib
+    test_dates = [str(day.date()) for day in x.index[masks["test"]]]
+    result = {"unit": "µg/m³", "same_dates": True,
+              "test_dates_sha256": hashlib.sha256("\n".join(test_dates).encode()).hexdigest(),
+              "test_dates": test_dates,
+              "selection_rule": "Menor MAE de validación; nunca por el resultado de test",
+              "interpretation": "Comparación exploratoria: 2026 ya se había consultado; no es una evaluación externa nueva ni prueba causal",
+              "pairs": {}, "coverage": {}}
+    primary = next((c for c in x if c.startswith("TRAFICO_INTENSIDAD_lag_")), None)
+    for label, mask in masks.items():
+        n = int(mask.sum())
+        available = int(x.loc[mask, primary].notna().sum()) if primary else 0
+        result["coverage"][label] = {"days": n, "days_with_traffic": available,
+            "fraction_days_with_traffic": available/n if n else 0}
+    for kind in ("ridge", "hist"):
+        without, with_traffic = f"{kind}_no_traffic", f"{kind}_full"
+        pair = {"without_traffic": without, "with_traffic": with_traffic}
+        for split, source in (("validation", report["validation"]), ("test", report["test"]["candidates"])):
+            base, enriched = source[without], source[with_traffic]
+            improvement = base["mae"] - enriched["mae"]
+            pair[split] = {"without_traffic": base, "with_traffic": enriched,
+                "mae_improvement": improvement,
+                "mae_improvement_percent": 100*improvement/base["mae"] if base["mae"] else None,
+                "rmse_improvement": base["rmse"]-enriched["rmse"]}
+        pair["test_by_month"] = {}
+        for month in sorted(set(day.strftime("%Y-%m") for day in x.index[masks["test"]])):
+            month_mask = x.index[masks["test"]].strftime("%Y-%m") == month
+            observed = y.loc[masks["test"]].iloc[month_mask]
+            a, b = predictions[without][month_mask], predictions[with_traffic][month_mask]
+            pair["test_by_month"][month] = {"without_traffic": metrics(observed, a), "with_traffic": metrics(observed, b)}
+        result["pairs"][kind] = pair
+    return result

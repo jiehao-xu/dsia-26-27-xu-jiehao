@@ -129,6 +129,13 @@ def test_train_save_load_predict_and_provider_failure(settings):
     report = train(settings)
     assert report["partitions"]["test"]["start"] > "2025-12-31"
     assert np.isfinite(report["test"]["selected"]["mae"])
+    assert report["traffic_evaluation"]["same_dates"] is True
+    for pair in report["traffic_evaluation"]["pairs"].values():
+        assert pair["test"]["without_traffic"]["n"] == pair["test"]["with_traffic"]["n"]
+        assert pair["test"]["mae_improvement"] == pytest.approx(
+            pair["test"]["without_traffic"]["mae"]-pair["test"]["with_traffic"]["mae"])
+    assert report["selected"] == min(report["validation"], key=lambda k: report["validation"][k]["mae"])
+    assert (settings.output_dir / "reports/traffic_evaluation.md").exists()
     artifact = joblib.load(settings.model_path)
     assert hasattr(artifact["model"], "predict")
     first = predict(settings, "2026-03-01")
@@ -232,3 +239,35 @@ def test_city_target_rejects_conflicting_station_day():
                           "ESTACION": [4, 4], "NO2": [10., 20.], "VALIDO": [1, 1]})
     with pytest.raises(ValueError, match="misma clave"):
         aggregate_no2(frame)
+
+def test_incremental_traffic_cache_only_reads_new_months(tmp_path, monkeypatch):
+    from no2_madrid import dataset
+    files = []
+    for month in (1, 2):
+        file = tmp_path / f"trafico_2026_{month:02}.csv.gz"
+        pd.DataFrame({"FECHA_HORA": [f"2026-{month:02}-01 12:00:00"], "ID_SENSOR": [1],
+                      "TIPO_ELEMENTO": ["URB"], "INTENSIDAD": [100.*month], "OCUPACION": [10.],
+                      "CARGA": [20.], "VELOCIDAD_MEDIA": [np.nan]}).to_csv(file, sep=";", index=False)
+        files.append(file)
+    cache = tmp_path / "daily.csv"
+    dataset.load_traffic_daily(files[:1], cache)
+    original = dataset.aggregate_traffic
+    calls = []
+    def tracked(paths, **kwargs):
+        calls.extend(paths)
+        return original(paths, **kwargs)
+    monkeypatch.setattr(dataset, "aggregate_traffic", tracked)
+    incremental = dataset.load_traffic_daily(files, cache)
+    assert calls == [files[1]]
+    expected = original(files)
+    pd.testing.assert_frame_equal(incremental, expected, check_dtype=False)
+    calls.clear()
+    dataset.load_traffic_daily(files, cache)
+    assert calls == []
+    # Si cambia un original ya agregado, se invalida toda la caché.
+    files[0].write_bytes(files[0].read_bytes())
+    import os
+    stat = files[0].stat()
+    os.utime(files[0], ns=(stat.st_atime_ns, stat.st_mtime_ns + 1000000000))
+    dataset.load_traffic_daily(files, cache)
+    assert calls == files

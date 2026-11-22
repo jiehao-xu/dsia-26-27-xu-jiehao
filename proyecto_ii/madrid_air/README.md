@@ -19,7 +19,7 @@ uv run no2-madrid run --ai-mode real
 
 `run` reconstruye el dataset si es necesario, carga el modelo ya entrenado,
 predice y solicita un resumen a Gemini. No descarga ni reentrena. La agregación
-de tráfico usa una caché diaria; la primera pasada puede tardar varios minutos.
+de tráfico usa una caché diaria incremental; la primera pasada puede tardar varios minutos.
 
 La salida JSON contiene `scope: Madrid`, el valor previsto, la definición del
 objetivo, los IDs y número de estaciones de la red, la cobertura de NO₂ del día
@@ -107,6 +107,21 @@ proyecto. Consultar las condiciones de reutilización de cada ficha; las de
 meteorología, calendario y ubicación de tráfico indican CC BY 4.0. Los catálogos
 registran las URL exactas descargadas en `data/metadata/sources.json`.
 
+### Licencias de NO₂ y tráfico histórico
+
+Los datos de [NO₂ diario](https://datos.madrid.es/dataset/201410-0-calidad-aire-diario)
+y [tráfico histórico](https://datos.madrid.es/dataset/208627-0-transporte-ptomedida-historico)
+proceden del Ayuntamiento de Madrid y sus fichas oficiales indican la licencia
+[Creative Commons Atribución 4.0 Internacional (CC BY 4.0)](https://creativecommons.org/licenses/by/4.0/deed.es).
+
+En este proyecto se han limpiado, filtrado y agregado para construir el dataset
+de predicción. Se reconoce al Ayuntamiento de Madrid como fuente, se enlazan
+los conjuntos originales y la licencia, y se indican estas transformaciones.
+El proyecto no implica respaldo ni aprobación del Ayuntamiento de Madrid.
+
+Estas condiciones corresponden a los datos y no establecen la licencia del
+código desarrollado en el repositorio.
+
 ## Preparación de variables y disponibilidad
 
 | Fuente | Transformación |
@@ -134,11 +149,10 @@ NO₂ disponible, no necesariamente mañana respecto a la ejecución.
 
 ## Entrenamiento y evaluación
 
-Se comparan persistencia, Ridge con NO₂/calendario, Ridge con todas las variables
-y HistGradientBoostingRegressor con todas las variables. Los modelos incluyen
+Se comparan persistencia, Ridge con NO₂/calendario y dos parejas de modelos: Ridge y HistGradientBoostingRegressor, cada uno con meteorología y calendario, con y sin variables de tráfico. Los modelos incluyen
 imputación por mediana, indicadores de ausencia y escalado en una Pipeline
 sklearn. Se selecciona por MAE de validación y después se ajusta el ganador con
-entrenamiento y validación; test permanece reservado. La persistencia también
+entrenamiento y validación; test no se utiliza para ajustar ni seleccionar el modelo. La persistencia también
 puede ganar y se guarda como regresor sklearn.
 
 | Periodo | Uso |
@@ -154,12 +168,48 @@ intervalo de confianza. Se limitan a cero las predicciones negativas.
 
 Métricas actuales: `reports/evaluation.md` y `reports/metrics.json`.
 
-Ejecución municipal verificada el 22 de noviembre de 2026: red de 24 estaciones, 1.368 objetivos diarios válidos y modelo ridge_basic. MAE de test: 5,160 µg/m³; RMSE: 6,830 µg/m³, sobre 304 días. La predicción histórica para el 1/11/2026 es 30,16 µg/m³. Gemini respondió HTTP 200 con ai_status=real. Estos resultados corresponden a la media de Madrid.
+Última evaluación municipal del 22 de noviembre de 2026: red de 24 estaciones, 1.368 objetivos diarios válidos y tráfico procesado hasta octubre de 2026. Modelo elegido por validación: ridge_no_traffic (NO₂ histórico, calendario y meteorología). MAE de test: 5,054 µg/m³; RMSE: 6,671 µg/m³, sobre 304 días. La inferencia del modelo actualizado se comprobó en mock; la predicción histórica para el 1/11/2026 es 28,75 µg/m³.
 Las cifras del modelo anterior de una sola estación no son las métricas de
 Madrid. Su evidencia se conserva etiquetada en `reports/archive/station_4/`.
-El tráfico procesado disponible termina en octubre de 2025; los meses
-posteriores siguen pendientes de limpieza y sus entradas en test quedan
-ausentes. Esta limitación no afecta a la definición municipal del objetivo.
+El tráfico procesado cubre los 46 meses de enero de 2023 a octubre de 2026. Se completaron noviembre y diciembre de 2025 y enero a octubre de 2026, y se repite la evaluación con esas entradas disponibles. La cobertura efectiva por partición se registra en el informe de aportación del tráfico.
+
+
+### Evaluación específica del tráfico
+
+La comparación mantiene las mismas fechas, objetivos, algoritmo y parámetros,
+y cambia únicamente la inclusión de variables de tráfico. Se comparan Ridge
+sin tráfico frente a Ridge completo y el mismo par para el modelo de árboles,
+conservando NO₂ histórico, calendario y meteorología en ambas versiones.
+
+Los modelos se eligen por MAE de validación. Después se ajustan con entrenamiento
+y validación y se reportan MAE, RMSE, mejora absoluta y porcentual y error mensual
+en las mismas fechas de 2026. Una mejora positiva indica menor error con tráfico;
+una negativa indica empeoramiento. También se publica la proporción de días
+con intensidad de tráfico disponible para cada partición.
+
+Los resultados están en `reports/traffic_evaluation.md` y
+`reports/traffic_evaluation.json`, además del informe general. El JSON incluye
+las fechas exactas y su firma para comprobar que la comparación usa los mismos días.
+El test de 2026 ya se había consultado anteriormente: esta comparación es
+exploratoria, no una evaluación externa nueva ni una demostración causal.
+La inclusión de tráfico no garantiza que mejore el modelo.
+
+#### Resultado con tráfico completo
+
+La intensidad de tráfico está disponible en los 304 días del test (100 %),
+así como en todos los días evaluados de entrenamiento y validación.
+
+| Modelo | MAE sin tráfico | MAE con tráfico |
+|---|---|---|
+| Ridge | 5,054 | 5,072 |
+| Árboles | 5,500 | 5,484 |
+
+Valores en µg/m³. En esta comparación, el tráfico empeora ligeramente Ridge y
+mejora ligeramente el modelo de árboles, que sigue teniendo más error que
+Ridge. El modelo seleccionado por validación utiliza NO₂, calendario y
+meteorología, sin tráfico. Estas diferencias pequeñas no demuestran por sí
+solas una mejora generalizable; las métricas y el desglose mensual quedan
+publicados para revisar el resultado.
 
 ## Artefactos y estructura
 
@@ -197,6 +247,8 @@ Referencia: [SDK oficial de Google](https://github.com/googleapis/python-genai).
 Uso de IA durante el desarrollo: [AI_USAGE.md](AI_USAGE.md).
 
 ## Pruebas y continuidad
+
+Puedes consultar las ejecuciones y los resultados de las pruebas en [GitHub Actions del repositorio](https://github.com/jiehao-xu/dsia-26-27-xu-jiehao/actions).
 
 Las pruebas cubren limpieza, media municipal, cobertura mínima, agregación
 entre estaciones, tráfico independiente del tamaño de bloque, retardos y
