@@ -285,3 +285,5 @@ uv run python -m unittest discover -s tests
 - [NO₂: magnitudes, unidades y formato](https://datos.madrid.es/dataset/201410-0-calidad-aire-diario/resource/201410-63-calidad-aire-diario/download/201410-63-calidad-aire-diario.pdf).
 - [Meteorología: magnitudes, unidades y validación](https://datos.madrid.es/dataset/300352-0-meteorologicos-horarios/resource/300352-122-meteorologicos-horarios/download/300352-122-meteorologicos-horarios.pdf).
 - [Tráfico: campos, unidades e indicadores de error](https://datos.madrid.es/dataset/208627-0-transporte-ptomedida-historico/resource/208627-81-transporte-ptomedida-historico/download/208627-81-transporte-ptomedida-historico.pdf).
+
+.
