@@ -23,3 +23,7 @@ Fuentes: [NO₂](https://datos.madrid.es/dataset/201410-0-calidad-aire-diario),
 [tráfico](https://datos.madrid.es/dataset/208627-0-transporte-ptomedida-historico) y
 [calendario](https://datos.madrid.es/dataset/300082-0-calendario_laboral).
 El Ayuntamiento no respalda las predicciones del proyecto.
+
+Los archivos de texto de esta muestra usan saltos de l?nea LF, fijados mediante
+.gitattributes. Sus firmas se calculan sobre esos bytes; el modelo joblib se
+trata como binario. Se conserva la validaci?n de integridad antes de cargarlo.

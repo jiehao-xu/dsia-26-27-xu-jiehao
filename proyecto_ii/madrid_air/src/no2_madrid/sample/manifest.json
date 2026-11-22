@@ -12,8 +12,9 @@
   "attribution": "Ayuntamiento de Madrid; datos limpiados y agregados en NO₂ Madrid",
   "files": {
     "model.joblib": "8227ee7a3b6dc9f713cb3f8e6382e00886f3acef2f86eac349d57c41b3e74583",
-    "model.json": "7a9561c0f8953503097907e3a8da17fd2c907a5c4c1490336b6314dcb40e5398",
-    "daily.csv": "746b4de3d0e120111d1ece6813d73e98e8b3f4c65d6272b297405dde17c36237",
-    "daily.json": "a5e4f926d3378a6a7be288a943fbaf8e20b383f8d3007d1de57c4df1779083d6"
-  }
+    "model.json": "e29e611915671ff72740d6f2be6669edf63e0f7253c87ca1188cc3af21623148",
+    "daily.csv": "312316e3104af4ec42fcc11b02f4113e1cb6a4bb609918247f7c1018f910420c",
+    "daily.json": "347f7e2fccac6520ae89371599904f3a542cb3f37640712c4a2880068e432cf9"
+  },
+  "text_line_endings": "LF; enforced by sample/.gitattributes"
 }

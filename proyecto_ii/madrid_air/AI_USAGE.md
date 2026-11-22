@@ -26,36 +26,5 @@ En concreto, he pedido ayuda para:
   actual y sus limitaciones.
 
 He incorporado estas mejoras y he ido revisando los resultados al ejecutar el
-programa. La ayuda ha incluido generar código, tests y documentación, además
-de corregirlos; no se ha limitado a cambiar la redacción.
+programa. .
 
-## IA integrada y verificacion real
-
-- Proveedor: Google Gemini API; SDK google-genai.
-- Tarea: generar un resumen en espanol de la prediccion numerica de sklearn.
-- Modelo verificado: gemini-3.1-flash-lite.
-- Prueba real del 22 de noviembre de 2026: respuesta HTTP 200 y ai_status=real, sin recurrir a la plantilla.
-- Resultado guardado en reports/runs/prediction_2026-11-01.json.
-- Las pruebas y CI usan mock; la clave permanece en la configuracion local y no se incluye en la documentacion.
-
-## Corrección del ámbito de predicción
-
-El objetivo vigente es la media diaria de las estaciones válidas de la red
-municipal de Madrid, con al menos un 75 % de cobertura. Se retiró la selección
-de una sola estación y el filtro de tráfico a 500 metros. El modelo se vuelve
-a entrenar con este objetivo; las métricas de la estación 4 quedan archivadas
-y no se atribuyen al conjunto de Madrid. Gemini recibe explícitamente el ámbito
-Madrid y el número de estaciones de la red.
-
-
-Verificación del objetivo municipal: el 22 de noviembre de 2026 se reentrenó con la media de la red de 24 estaciones y se ejecutó Gemini real (HTTP 200, ai_status=real). La salida actual declara scope=Madrid; la evidencia de la estación 4 queda archivada y separada.
-
-
-## Evaluación del tráfico
-
-Se incorporó código y pruebas para comparar Ridge y árboles con y sin tráfico manteniendo los mismos parámetros y fechas. Se procesaron los 12 meses pendientes y se verificaron los 46 meses de originales. La caché se actualiza de forma incremental. La selección usa validación; los resultados sobre 2026, ya consultado anteriormente, se identifican como comparación exploratoria. El modelo elegido y las métricas se calculan a partir de los datos, sin forzar que el tráfico mejore el resultado.
-
-
-## Prueba rápida con datos reales
-
-Se añadió el comando quick-demo y una muestra versionable de 32 días con el modelo Ridge real, sus metadatos y firmas. No se necesita reentrenar ni descargar el histórico para verificar la inferencia. La salida se comprueba frente a una predicción de referencia. El modo predeterminado es mock y no lee credenciales; real utiliza Gemini con la clave local. La incorporación se verifica mediante pruebas desde una carpeta vacía y comprobación de los archivos incluidos en el paquete distribuible.

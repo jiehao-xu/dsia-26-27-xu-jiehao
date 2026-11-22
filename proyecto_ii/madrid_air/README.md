@@ -71,7 +71,7 @@ uv run pytest -q
 uv run no2-madrid demo --dir artifacts/prueba
 ```
 
-En la versión actual deben pasar **23 pruebas**. `demo` genera dos estaciones
+En la versión actual deben pasar **25 pruebas**. `demo` genera dos estaciones
 sintéticas, construye su media, entrena, evalúa, guarda y carga un modelo nuevo,
 y predice con IA `mock`. No lee `.env` ni realiza peticiones a Google. Sus
 resultados quedan en `artifacts/prueba/` y no son métricas de datos reales.
