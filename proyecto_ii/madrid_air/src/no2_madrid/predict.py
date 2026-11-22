@@ -2,6 +2,7 @@
 from datetime import datetime, timezone
 import json
 import logging
+from pathlib import Path
 
 import joblib
 import numpy as np
@@ -18,14 +19,15 @@ from no2_madrid.train import load_daily
 log = logging.getLogger(__name__)
 
 
-def predict(settings: Settings, date=None, client=None):
+def predict(settings: Settings, date=None, client=None, *, model_path=None, dataset_path=None):
+    dataset_path = Path(dataset_path) if dataset_path is not None else settings.dataset_path
     # joblib sólo debe cargar artefactos locales de confianza.
-    artifact = joblib.load(settings.model_path)
+    artifact = joblib.load(model_path if model_path is not None else settings.model_path)
     meta, model = artifact["metadata"], artifact["model"]
     if json.loads(json.dumps(meta["contract"])) != json.loads(json.dumps(data_contract(settings))):
         raise ValueError("La configuración no coincide con la del modelo: reentrena o restaura la configuración.")
-    daily = load_daily(settings)
-    dataset_meta = json.loads(settings.dataset_path.with_suffix(".json").read_text(encoding="utf-8"))
+    daily = load_daily(settings, dataset_path)
+    dataset_meta = json.loads(dataset_path.with_suffix(".json").read_text(encoding="utf-8"))
     if meta["no2_stations"] != dataset_meta["no2_stations"]:
         raise ValueError("La red de estaciones NO₂ ha cambiado: reentrena el modelo.")
     target = pd.Timestamp(date) if date else daily.NO2.dropna().index.max() + pd.Timedelta(days=1)

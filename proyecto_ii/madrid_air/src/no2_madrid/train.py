@@ -28,12 +28,13 @@ def metrics(y, prediction):
             "rmse": float(np.sqrt(mean_squared_error(y, prediction))), "n": len(y)}
 
 
-def load_daily(settings):
-    daily = pd.read_csv(settings.dataset_path, sep=";", parse_dates=["FECHA"]).set_index("FECHA")
-    meta = json.loads(settings.dataset_path.with_suffix(".json").read_text(encoding="utf-8"))
+def load_daily(settings, dataset_path=None):
+    dataset_path = Path(dataset_path) if dataset_path is not None else settings.dataset_path
+    daily = pd.read_csv(dataset_path, sep=";", parse_dates=["FECHA"]).set_index("FECHA")
+    meta = json.loads(dataset_path.with_suffix(".json").read_text(encoding="utf-8"))
     # JSON normaliza tuplas como listas.
     expected = json.loads(json.dumps(data_contract(settings)))
-    if meta["contract"] != expected or meta["dataset_sha256"] != sha256(settings.dataset_path):
+    if meta["contract"] != expected or meta["dataset_sha256"] != sha256(dataset_path):
         raise ValueError("Dataset/configuración incompatibles o archivo modificado: ejecuta build-dataset.")
     return daily
 

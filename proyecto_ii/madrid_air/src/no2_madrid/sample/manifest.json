@@ -1,0 +1,19 @@
+{
+  "kind": "real_madrid_inference_sample",
+  "model": "ridge_no_traffic",
+  "prediction_date": "2026-11-01",
+  "expected_no2": 28.75443833095471,
+  "unit": "µg/m³",
+  "sample_start": "2026-10-01",
+  "sample_end": "2026-11-01",
+  "rows": 32,
+  "training_dataset_sha256": "0f38cf1955b28fa9eabf149f1f2efa16bd885dc292dd7dd1e804fa99d39869df",
+  "license": "CC BY 4.0",
+  "attribution": "Ayuntamiento de Madrid; datos limpiados y agregados en NO₂ Madrid",
+  "files": {
+    "model.joblib": "8227ee7a3b6dc9f713cb3f8e6382e00886f3acef2f86eac349d57c41b3e74583",
+    "model.json": "7a9561c0f8953503097907e3a8da17fd2c907a5c4c1490336b6314dcb40e5398",
+    "daily.csv": "746b4de3d0e120111d1ece6813d73e98e8b3f4c65d6272b297405dde17c36237",
+    "daily.json": "a5e4f926d3378a6a7be288a943fbaf8e20b383f8d3007d1de57c4df1779083d6"
+  }
+}

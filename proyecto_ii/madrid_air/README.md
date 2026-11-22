@@ -8,65 +8,173 @@ La referencia municipal es la media aritmética de las mediciones válidas de la
 estaciones de calidad del aire. Cada estación pesa igual: no es una media
 ponderada por superficie o población ni la concentración de cada barrio.
 
-## Ejecutar
+## Descargar y comprobar desde cero
 
-Python 3.12 o superior y uv, desde esta carpeta:
+Los siguientes pasos están pensados para PowerShell en Windows, desde una
+carpeta distinta a la del desarrollo. Necesitas Git y Python 3.12, la versión
+utilizada para comprobar el proyecto.
+
+### 1. Descargar el repositorio e instalar
+
+Si no tienes uv, instálalo:
 
 ```powershell
+python -m pip install uv==0.12.9
+```
+
+Después clona el repositorio completo y entra en Madrid Air:
+
+```powershell
+git clone https://github.com/jiehao-xu/dsia-26-27-xu-jiehao.git dsia-prueba
+cd dsia-prueba\proyecto_ii\madrid_air
 uv sync --locked --package no2-madrid --group dev
+```
+
+El proyecto pertenece al workspace del repositorio y utiliza el `uv.lock` de
+su raíz. Conserva la estructura del repositorio completo. GitHub contiene los
+cambios que se hayan subido; para probar la última versión deben estar
+publicados también los cambios locales recientes.
+
+### 2. Probar el modelo real sin descargar ni entrenar
+
+```powershell
+uv run no2-madrid quick-demo
+```
+
+Este comando carga el modelo Ridge entrenado con datos reales de Madrid y una
+muestra de 32 días incluida en el paquete. No descarga archivos, no reentrena,
+no necesita claves y no lee `.env` en su modo `mock` por defecto.
+El modelo y la muestra ocupan unos 24 KB en total.
+
+Resultado de referencia: **28,75 µg/m³ para el 1 de noviembre de 2026**, como
+media de la red municipal de 24 estaciones. El JSON incluye `scope: "Madrid"`,
+`ai_status: "mock"` y `quick_demo.reference_prediction_matches: true`.
+Se comprueba que la predicción coincide con la referencia dentro de la tolerancia
+numérica. Es una predicción histórica, no una observación ni un pronóstico de hoy.
+
+El resultado se guarda en:
+
+```text
+artifacts/quick-demo/reports/runs/prediction_2026-11-01.json
+```
+
+Los archivos distribuidos están en `src/no2_madrid/sample/`: modelo joblib,
+metadatos, dataset pequeño y manifiesto con firmas SHA-256. La firma del dataset
+de entrenamiento completo se conserva separada de la firma de esta muestra.
+Las versiones compatibles se instalan con el lockfile del workspace.
+La muestra permite probar inferencia, no reentrenar ni reproducir todo el test.
+
+Para ejecutar las pruebas y, opcionalmente, una demostración sintética completa:
+
+```powershell
+uv run pytest -q
+uv run no2-madrid demo --dir artifacts/prueba
+```
+
+En la versión actual deben pasar **23 pruebas**. `demo` genera dos estaciones
+sintéticas, construye su media, entrena, evalúa, guarda y carga un modelo nuevo,
+y predice con IA `mock`. No lee `.env` ni realiza peticiones a Google. Sus
+resultados quedan en `artifacts/prueba/` y no son métricas de datos reales.
+
+### 3. Reproducir la descarga y el entrenamiento completos (opcional)
+
+Esta vía permite reconstruir el dataset y las métricas del proyecto desde sus
+fuentes. Los CSV grandes y los artefactos generados en `artifacts/` no se incluyen
+en Git; sí se distribuye el modelo pequeño de prueba en `src/no2_madrid/sample/`.
+
+Para ejecutar `run` con el histórico completo, primero debes descargar los datos
+y entrenar el modelo en su ubicación por defecto. `quick-demo` utiliza sus
+archivos incluidos directamente y no instala el modelo en `artifacts/model.joblib`.
+La demostración sintética también mantiene sus resultados separados.
+
+Crea `.env` solo si no existe, para conservar cualquier clave ya configurada:
+
+```powershell
+if (-not (Test-Path -LiteralPath .env)) {
+    Copy-Item -LiteralPath .env.example -Destination .env
+}
+```
+
+Las fuentes municipales no requieren clave. Descarga, limpia, integra y entrena:
+
+```powershell
+uv run no2-madrid ingest --source all --start 2023-01-01 --end 2026-10-31
+uv run no2-madrid preprocess --workers 1
+uv run no2-madrid build-dataset
+uv run no2-madrid train --train-end 2024-12-31 --validation-end 2025-12-31
+uv run no2-madrid run --ai-mode mock
+```
+
+La descarga completa de tráfico ocupa decenas de GB; la descarga, limpieza y
+primera agregación pueden tardar. Si ya tienes los CSV limpios, empieza por
+`build-dataset`. La limpieza omite meses sin cambios y la agregación utiliza
+una caché incremental.
+
+`ingest --source` admite `no2`, `municipal`, `calendar`, `traffic`, `metadata` y
+`all`. NO₂ y meteorología se descargan por años y tráfico por meses.
+`--refresh` actualiza los ZIP de tráfico. Los catálogos de coordenadas son una
+referencia y no se utilizan para filtrar la red por radio.
+
+### 4. Probar Gemini real
+
+Añade tu clave de Google a `.env`, que está excluido de Git:
+
+```dotenv
+AI_PROVIDER=google
+GOOGLE_API_KEY=tu_clave_de_google
+GOOGLE_MODEL=gemini-3.1-flash-lite
+```
+
+Para probar Gemini con el modelo y la muestra incluidos, sin descargar ni entrenar:
+
+```powershell
+uv run no2-madrid quick-demo --ai-mode real
+```
+
+Si has preparado el histórico completo y entrenado su modelo, puedes ejecutar:
+
+```powershell
 uv run no2-madrid run --ai-mode real
 ```
 
-`run` reconstruye el dataset si es necesario, carga el modelo ya entrenado,
-predice y solicita un resumen a Gemini. No descarga ni reentrena. La agregación
-de tráfico usa una caché diaria incremental; la primera pasada puede tardar varios minutos.
+El JSON debe indicar `ai_status: "real"`, `ai_provider: "google"` y un resumen
+generado por Gemini. Si indica `ai_status: "fallback"`, la predicción numérica
+se ha conservado, pero la petición a Google ha fallado y se ha utilizado una
+plantilla. `ai_status: "mock"` identifica una ejecución sin llamada al proveedor.
+No publiques la clave ni el archivo `.env`.
 
-La salida JSON contiene `scope: Madrid`, el valor previsto, la definición del
-objetivo, los IDs y número de estaciones de la red, la cobertura de NO₂ del día
-de referencia, las fechas límite de información, el error histórico y el resumen.
-Se guarda en `reports/runs/prediction_AAAA-MM-DD.json`.
+## Ejecuciones posteriores y resultados
 
-## Reproducibilidad sin claves ni descargas
-
-```powershell
-uv run no2-madrid demo --dir artifacts/demo
-uv run pytest -q
-```
-
-La demostración genera dos estaciones sintéticas y predice su media con IA en
-`mock`; no lee `.env`. Sus resultados quedan separados en `artifacts/demo/` y
-no representan métricas sobre los datos reales de Madrid.
-
-Sin uv: instalar `requirements.txt`, ejecutar `python -m pip install --no-deps -e .`
-y utilizar `python -m no2_madrid` como alternativa al comando instalado.
-
-## Preparar los datos y entrenar
-
-Crear `.env` a partir de `.env.example` si aún no existe. Las claves se guardan
-solo en `.env`, excluido de Git. Las fuentes municipales no necesitan clave.
+Una vez preparados los datos y entrenado el modelo:
 
 ```powershell
-# Si faltan datos: descarga por años para NO₂/meteorología y por meses para tráfico.
-uv run no2-madrid ingest --source all --start 2023-01-01 --end 2026-10-31
-uv run no2-madrid preprocess --workers 1
-
-# Si ya tienes los archivos limpios: empezar aquí.
-uv run no2-madrid build-dataset
-uv run no2-madrid train --train-end 2024-12-31 --validation-end 2025-12-31
-uv run no2-madrid predict --ai-mode mock
+uv run no2-madrid run --ai-mode real
 ```
 
-La descarga completa de tráfico ocupa muchos GB. `ingest --source` admite
-`no2`, `municipal`, `calendar`, `traffic`, `metadata` y `all`; los catálogos de
-coordenadas sirven como referencia, no son necesarios para filtrar por radio.
-`--refresh` actualiza los ZIP de tráfico. La limpieza omite meses sin cambios.
-`run --prepare` incluye limpieza; no se programan tareas externas automáticamente.
+`run` actualiza el dataset a partir de los CSV limpios, carga el modelo existente,
+predice y solicita el resumen. No descarga ni reentrena. `run --prepare` incluye
+la limpieza previa; no programa tareas externas automáticamente.
+
+La salida JSON contiene el ámbito Madrid, el valor de NO₂ en µg/m³, la definición
+del objetivo, la red de estaciones, la cobertura del NO₂ de referencia, las
+fechas límite de información, el modelo, el error histórico y el resumen.
+El resultado se guarda en `reports/runs/prediction_AAAA-MM-DD.json`; las métricas
+en `reports/metrics.json` y el informe legible en `reports/evaluation.md`.
+
+La fecha automática es el siguiente día del histórico de NO₂ disponible, no
+necesariamente mañana. En la evaluación documentada, el histórico termina el
+31 de octubre de 2026 y se predice el 1 de noviembre de 2026. Una nueva descarga
+puede contener datos actualizados y cambiar las fechas y los resultados.
 
 Opciones globales, antes del subcomando:
 
 ```powershell
 uv run no2-madrid --data-dir data --output-dir . build-dataset
 ```
+
+Como alternativa sin uv, instala `requirements.txt` con pip y ejecuta
+`python -m pip install --no-deps -e .` desde esta carpeta. Los subcomandos pueden
+invocarse mediante `python -m no2_madrid` en lugar de `no2-madrid`.
 
 ## Configuración y objetivo municipal
 
@@ -224,10 +332,12 @@ publicados para revisar el resultado.
 | `reports/` | Métricas, predicciones de test, informe, gráficos y ejecuciones |
 | `tests/` | Pruebas unitarias e integración |
 
-Datos voluminosos, modelos binarios y ejecuciones quedan fuera de Git; se
+Datos voluminosos, artefactos generados en `artifacts/` y ejecuciones quedan fuera de Git; se
 entregan instrucciones para reentrenar y dependencias bloqueadas en el `uv.lock` de la raíz del repositorio, compartido por el workspace.
 Solo cargar artefactos joblib propios y fiables. Los modelos anteriores de una
 estación son incompatibles con el nuevo contrato municipal y no se reutilizan.
+
+La excepción es el paquete pequeño de prueba `src/no2_madrid/sample/`, que incluye el modelo entrenado y datos reales agregados para ejecutar `quick-demo` desde una descarga limpia.
 
 ## Interpretación con Gemini
 
@@ -253,7 +363,7 @@ Puedes consultar las ejecuciones y los resultados de las pruebas en [GitHub Acti
 Las pruebas cubren limpieza, media municipal, cobertura mínima, agregación
 entre estaciones, tráfico independiente del tamaño de bloque, retardos y
 ausencia de información futura, persistencia/carga/inferencia del modelo,
-cliente Google simulado y alternativa ante errores. La integración utiliza
+cliente Google simulado y alternativa ante errores. También se prueba la inferencia real con la muestra distribuida desde una carpeta vacía, sin descargar ni entrenar, y la detección de archivos de muestra modificados. La integración utiliza
 varias estaciones sintéticas y comprueba `scope: Madrid`.
 
 La CI está definida en `.github/workflows/proyecto-ii.yml` de la raíz del repositorio. Ejecuta los comandos desde `proyecto_ii/madrid_air`, instala el paquete `no2-madrid` con el lockfile compartido, ejecuta pytest y una demostración con IA en `mock`, sin claves. 

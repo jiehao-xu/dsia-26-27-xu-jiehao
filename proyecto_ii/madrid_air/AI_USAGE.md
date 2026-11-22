@@ -54,3 +54,8 @@ Verificación del objetivo municipal: el 22 de noviembre de 2026 se reentrenó c
 ## Evaluación del tráfico
 
 Se incorporó código y pruebas para comparar Ridge y árboles con y sin tráfico manteniendo los mismos parámetros y fechas. Se procesaron los 12 meses pendientes y se verificaron los 46 meses de originales. La caché se actualiza de forma incremental. La selección usa validación; los resultados sobre 2026, ya consultado anteriormente, se identifican como comparación exploratoria. El modelo elegido y las métricas se calculan a partir de los datos, sin forzar que el tráfico mejore el resultado.
+
+
+## Prueba rápida con datos reales
+
+Se añadió el comando quick-demo y una muestra versionable de 32 días con el modelo Ridge real, sus metadatos y firmas. No se necesita reentrenar ni descargar el histórico para verificar la inferencia. La salida se comprueba frente a una predicción de referencia. El modo predeterminado es mock y no lee credenciales; real utiliza Gemini con la clave local. La incorporación se verifica mediante pruebas desde una carpeta vacía y comprobación de los archivos incluidos en el paquete distribuible.

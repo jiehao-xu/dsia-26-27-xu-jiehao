@@ -1,0 +1,43 @@
+{
+  "contract": {
+    "target_scope": "madrid_network_mean",
+    "target_version": 2,
+    "meteo_source": "municipal_network",
+    "traffic_scope": "municipal_network",
+    "min_station_coverage": 0.75,
+    "meteo_lag_days": 7,
+    "no2_lag_days": 1,
+    "traffic_lag_days": 1,
+    "use_traffic": true
+  },
+  "dataset_sha256": "746b4de3d0e120111d1ece6813d73e98e8b3f4c65d6272b297405dde17c36237",
+  "no2_stations": [
+    4,
+    8,
+    11,
+    16,
+    17,
+    18,
+    24,
+    27,
+    35,
+    36,
+    38,
+    39,
+    40,
+    47,
+    48,
+    49,
+    50,
+    54,
+    55,
+    56,
+    57,
+    58,
+    59,
+    60
+  ],
+  "target_definition": "Media aritmética diaria de estaciones válidas de la red municipal de Madrid",
+  "purpose": "Prueba rápida de inferencia real; no es un dataset de entrenamiento",
+  "source_full_dataset_sha256": "0f38cf1955b28fa9eabf149f1f2efa16bd885dc292dd7dd1e804fa99d39869df"
+}

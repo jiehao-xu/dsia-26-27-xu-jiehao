@@ -35,6 +35,9 @@ def parser():
             command.add_argument("--workers", type=int, default=1)
     demonstration = sub.add_parser("demo", help="Flujo sintético independiente, sin red ni credenciales")
     demonstration.add_argument("--dir", type=Path, default=Path("artifacts/demo"))
+    quick = sub.add_parser("quick-demo", help="Predicción real con modelo y muestra incluidos; sin descargar ni entrenar")
+    quick.add_argument("--dir", type=Path, default=Path("artifacts/quick-demo"))
+    quick.add_argument("--ai-mode", choices=["mock", "real"], default="mock")
     return p
 
 
@@ -98,6 +101,10 @@ def main():
             # No leer .env: demostración y CI siempre independientes de credenciales.
             from no2_madrid.demo import demo
             print(json.dumps(demo(args.dir), ensure_ascii=False, indent=2))
+            return
+        if args.command == "quick-demo":
+            from no2_madrid.quick_demo import quick_demo
+            print(json.dumps(quick_demo(args.dir, args.ai_mode), ensure_ascii=False, indent=2))
             return
         settings = Settings.from_env()
         overrides = {k: getattr(args, k) for k in ("data_dir", "output_dir") if getattr(args, k) is not None}

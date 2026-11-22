@@ -43,3 +43,5 @@ jobs:
         run: uv run --locked --package no2-madrid pytest -q
       - name: Demostración completa con IA mock
         run: uv run --locked --package no2-madrid no2-madrid demo --dir artifacts/ci-demo
+      - name: Prueba rápida con modelo y muestra reales incluidos
+        run: uv run --locked --package no2-madrid no2-madrid quick-demo --dir artifacts/ci-quick-demo
